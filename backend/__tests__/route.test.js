@@ -1,26 +1,26 @@
 import request from "supertest";
-import express, { response } from "express";
+import express from "express";
 import bodyParser from "body-parser";
 import userRoutes from "../routes/userRoutes";
 import User from "../models/userModel";
 import generateToken from "../utils/generateToken";
-// import protect from "../middleware/authMIddleware";
-import jwt from "jsonwebtoken";
+
+//middleware
+
+jest.mock("../middleware/authMIddleware", () => ({
+  protect: jest.fn((req, res, next) => next()),
+}));
 
 // mocks
 jest.mock("../models/userModel", () => ({
+  findById: jest.fn(),
   findOne: jest.fn(),
   create: jest.fn(),
+  save: jest.fn(),
 }));
+
+//utils
 jest.mock("../utils/generateToken");
-
-// jest.mock("../middleware/authMIddleware");
-
-// Mock the protect middleware
-const protect = jest.fn(async (req, res, next) => {
-  // Bypass the middleware logic and call next directly
-  next();
-});
 
 //init app
 const app = express();
@@ -159,7 +159,6 @@ describe("POST /api/users", () => {
 
       expect(response.statusCode).toBe(200);
       expect(response.body).toEqual({ message: "User Logged Out" });
-      // !
       expect(response.headers["set-cookie"][0]).toMatch(/jwt=;.*HttpOnly/);
       expect(response.headers["set-cookie"][0]).toContain(
         "Expires=Thu, 01 Jan 1970 00:00:00 GMT"
@@ -176,13 +175,69 @@ describe("POST /api/users", () => {
 
       const response = await request(app)
         .get("/api/users/profile")
-        // .set("Authorization", "token")
         .send({ user: mockUser });
 
-      console.log(response.statusCode);
-      console.log(response.body);
+      expect(response.statusCode).toBe(200);
+      expect(response.body).toEqual({
+        message: "User Profile",
+        user: mockUser,
+      });
     });
   });
 
-  describe("PUT /profile api", () => {});
+  describe("PUT /profile api", () => {
+    test("successfully update the profile", async () => {
+      const mockUser = {
+        _id: "user-id",
+        name: "raj",
+        email: "raj@gmal.com",
+        password: "123",
+
+        save: jest.fn().mockResolvedValue({
+          _id: "user-id",
+          name: "raj",
+          email: "raj@gmal.com",
+          password: "123",
+        }),
+      };
+
+      User.findById.mockResolvedValue(mockUser);
+
+      const response = await request(app)
+        .put("/api/users/profile")
+        .send({ user: mockUser });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body).toEqual({
+        _id: "user-id",
+        name: "raj",
+        email: "raj@gmal.com",
+      });
+    });
+
+    test("invalid user", async () => {
+      const mockUser = {
+        _id: "user-id",
+        name: "raj",
+        email: "raj@gmal.com",
+        password: "123",
+
+        save: jest.fn().mockResolvedValue({
+          _id: "user-id",
+          name: "raj",
+          email: "raj@gmal.com",
+          password: "123",
+        }),
+      };
+
+      User.findById.mockResolvedValue(null);
+
+      const response = await request(app)
+        .put("/api/users/profile")
+        .send({ user: mockUser });
+
+      expect(response.statusCode).toBe(404);
+      expect(response.body.error).toBe("User not found");
+    });
+  });
 });
