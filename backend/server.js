@@ -1,5 +1,5 @@
 import path from "path";
-import express, { urlencoded } from "express";
+import express from "express";
 import dotenv from "dotenv";
 dotenv.config();
 import cookieParser from "cookie-parser";
@@ -34,3 +34,5 @@ app.use(notFound);
 app.use(errorHandler);
 
 app.listen(PORT, () => console.log(`server started on ${PORT}`));
+
+export { app };
