@@ -21,7 +21,8 @@ const authUser = asyncHandler(async (req, res) => {
     });
   } else {
     res.status(401).json({ error: "Invalid email or password" });
-    throw new Error("Invalid email or password");
+    //! error on line below : cannot send header after they've been sent
+    // throw new Error("Invalid email or password");
   }
 });
 

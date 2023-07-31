@@ -125,6 +125,7 @@ describe("protect middleware", () => {
   });
 });
 
+// first understand what this middleware does
 describe.skip("errorMiddleware", () => {
   test.skip("Returns 500 status code and error message if res status code is 200", () => {
     const err = new Error("Test error");
